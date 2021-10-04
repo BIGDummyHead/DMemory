@@ -100,7 +100,7 @@ namespace DummyMemory
             isDiposed = true;
         }
 
-        
+
 
         /// <summary>
         /// Used by the constructor to set properties. May only be called once disposed.
@@ -262,11 +262,8 @@ namespace DummyMemory
             return GetModule(moduleName, comparer).BaseAddress;
         }
 
-        /// <summary>
-        /// Get a process module's base address
-        /// </summary>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        public IntPtr this[string index] => GetBaseAddress(index, StringComparison.Ordinal);
     }
 }
+
+
+

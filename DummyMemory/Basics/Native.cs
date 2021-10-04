@@ -215,7 +215,15 @@ namespace DummyMemory
         /// <returns></returns>
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+        public static extern bool GetWindowRect(HandleRef hWnd, out RECT lpRect);
+
+        /// <summary>
+        /// Get window size
+        /// </summary>
+        /// <param name="hWnd"><see cref="Process.MainWindowHandle"/></param>
+        /// <param name="lpRect">Window size.</param>
+        /// <returns></returns>
+        public static bool GetWindowRect(IntPtr hWnd, out RECT lpRect) => GetWindowRect(new HandleRef(null, hWnd), out lpRect);
 
         /// <summary>
         /// Get <see cref="IntPtr"/> for process.

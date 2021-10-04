@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{1CEF0ADE-3FCB-43F3-A064-8476ADC01040}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>DummyMemory</RootNamespace>
     <AssemblyName>DummyMemory</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
@@ -94,6 +94,10 @@
     <Compile Include="Detouring\Cave.cs" />
     <Compile Include="Detouring\CaveBase.cs" />
     <Compile Include="Basics\Native.cs" />
+    <Compile Include="Game\GameMemory.cs" />
+    <Compile Include="Game\Matrix.cs" />
+    <Compile Include="Game\Vector2.cs" />
+    <Compile Include="Game\Vector3.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

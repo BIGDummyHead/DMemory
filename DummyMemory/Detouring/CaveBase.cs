@@ -69,15 +69,17 @@ namespace DummyMemory.Detouring
         /// <returns></returns>
         public virtual byte[] GetBack(IntPtr allocated, IntPtr codePtr, int requiredSize, byte[] writing)
         {
-            int jmpAddress = (int)((long)codePtr + requiredSize - ((long)allocated + writing.Length) - 5);
+            //add the memoryblock + how many bytes we are writing, this gives use the correct address for an origin
+            //we want to jump to the next address from our "injection" so we add the injection address + the size required : 5 + nop
+            int jmpAddress = (int)Jmp(allocated + writing.Length, codePtr + requiredSize);
 
-            byte[] jmpers = BitConverter.GetBytes(jmpAddress);
+            byte[] jmpBytes = BitConverter.GetBytes(jmpAddress);
 
-            byte[] ret = new byte[jmpers.Length + 1];
+            byte[] ret = new byte[jmpBytes.Length + 1];
 
             ret[0] = 0xE9;
 
-            jmpers.CopyTo(ret, 1);
+            jmpBytes.CopyTo(ret, 1);
 
             return ret;
         }
