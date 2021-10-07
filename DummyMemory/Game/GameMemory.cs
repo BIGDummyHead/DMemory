@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DummyMemory.Game
 {
@@ -64,11 +60,11 @@ namespace DummyMemory.Game
         /// Get a Vector3 struct from a Memory address
         /// </summary>
         /// <param name="address"></param>
-        /// <param name="buffer"></param>
         /// <param name="vector"></param>
         /// <returns></returns>
-        public bool ReadVector3(IntPtr address, byte[] buffer, out Vector3 vector)
+        public bool ReadVector3(IntPtr address, out Vector3 vector)
         {
+            byte[] buffer = new byte[12];
             bool read = ReadMemory(address, buffer);
 
             if (!read)
@@ -85,11 +81,11 @@ namespace DummyMemory.Game
         /// Get a Vector3 struct from a Memory address
         /// </summary>
         /// <param name="address"></param>
-        /// <param name="buffer"></param>
         /// <param name="vector"></param>
         /// <returns></returns>
-        public bool ReadVector2(IntPtr address, byte[] buffer, out Vector2 vector)
+        public bool ReadVector2(IntPtr address, out Vector2 vector)
         {
+            byte[] buffer = new byte[8];
             bool read = ReadMemory(address, buffer);
 
             if (!read)

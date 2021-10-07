@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DummyMemory
 {
@@ -34,7 +30,7 @@ namespace DummyMemory
             /// <summary>
             /// Y - Position of lower-right corner of window.
             /// </summary>
-            public int Bottom;     
+            public int Bottom;
 
             /// <summary>
             /// Width of window.
@@ -207,6 +203,16 @@ namespace DummyMemory
             LargePages = 0x20000000
         }
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        public const uint WS_BORDER = 0x800000;
+        public const int GWL_STYLE = (-16);
+        public const int HWND_TOPMOST = -1;
+        public const int HWND_NOTOPMOST = -2;
+        public const int SWP_NOMOVE = 0x0002;
+        public const int SWP_NOSIZE = 0x0001;
+        public const int SWP_SHOWWINDOW = 0x0040;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
         /// <summary>
         /// Get window size
         /// </summary>
@@ -311,7 +317,7 @@ namespace DummyMemory
         /// <param name="lpBaseAddress">Address to start write</param>
         /// <param name="write">Bytes to write</param>
         /// <returns></returns>
-        public static bool WriteProcessMemory(IntPtr hProcess, long lpBaseAddress, [In, Out]byte[] write)
+        public static bool WriteProcessMemory(IntPtr hProcess, long lpBaseAddress, [In, Out] byte[] write)
         {
             return WriteProcessMemory(hProcess, lpBaseAddress, write, write.Length, out _);
         }
@@ -392,6 +398,63 @@ namespace DummyMemory
         /// <returns></returns>
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
         public static extern bool VirtualFreeEx(IntPtr hProcess, IntPtr lpAddress, int dwSize, uint dwFreeType);
+
+        /// <summary>
+        /// Move window to position
+        /// </summary>
+        /// <param name="handle"><see cref="Process.MainWindowHandle"/></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="redraw"></param>
+        /// <returns></returns>
+        [DllImport("user32.dll")]
+        public static extern bool MoveWindow(IntPtr handle, int x, int y, int width, int height, bool redraw);
+
+        /// <summary>
+        /// Set the window position
+        /// </summary>
+        /// <param name="hWnd"></param>
+        /// <param name="hWndInsertAfter"></param>
+        /// <param name="X"></param>
+        /// <param name="Y"></param>
+        /// <param name="cx"></param>
+        /// <param name="cy"></param>
+        /// <param name="uFlags"></param>
+        /// <returns></returns>
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="hWnd"></param>
+        /// <param name="lpRect"></param>
+        /// <returns></returns>
+        [DllImport("user32.dll")]
+        public static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="hWnd"></param>
+        /// <param name="nIndex"></param>
+        /// <returns></returns>
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="hWnd"></param>
+        /// <param name="nIndex"></param>
+        /// <param name="dwNewLong"></param>
+        /// <returns></returns>
+
+        [DllImport("user32.dll")]
+        public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
 
     }
 }

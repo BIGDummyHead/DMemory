@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace DummyMemory
 {
@@ -103,7 +104,7 @@ namespace DummyMemory
 
 
         /// <summary>
-        /// Used by the constructor to set properties. May only be called once disposed.
+        /// Used by the constructor to set properties. May only be called when disposed.
         /// </summary>
         /// <param name="proc"></param>
         public void Open(Process proc)
@@ -123,27 +124,32 @@ namespace DummyMemory
         }
 
         /// <summary>
-        /// Read memory from an address
+        /// Read memory from an address with offsets.
         /// </summary>
         /// <param name="address">The address to read from</param>
         /// <param name="buffer">Buffer, used for size to read. Bytes are written to this.</param>
+        /// <param name="offsets"></param>
         /// <returns></returns>
-        public bool ReadMemory(IntPtr address, byte[] buffer)
+        public bool ReadMemory(IntPtr address, byte[] buffer, params int[] offsets)
         {
-            return Native.ReadProcessMemory(ProcHandle, (long)address, buffer, buffer.Length, out _);
+            IntPtr addr = FindDMAAddy(address, offsets);
+
+            return ReadMemory(addr, buffer);
         }
 
         /// <summary>
-        /// Read memory from an address
+        /// Read memory from an address with offsets.
         /// </summary>
-        /// <param name="address">Address to read from</param>
+        /// <param name="address">The address to read from</param>
         /// <param name="size">Size of read</param>
         /// <param name="read">Bytes read</param>
+        /// <param name="offsets"></param>
         /// <returns></returns>
-        public bool ReadMemory(IntPtr address, int size, out byte[] read)
+        public bool ReadMemory(IntPtr address, int size, out byte[] read, params int[] offsets)
         {
-            read = new byte[size];
-            return ReadMemory(address, read);
+            IntPtr addr = FindDMAAddy(address, offsets);
+
+            return ReadMemory(addr, size, out read);
         }
 
         /// <summary>
@@ -151,10 +157,59 @@ namespace DummyMemory
         /// </summary>
         /// <param name="address">Address to write to</param>
         /// <param name="buffer">Bytes to write to memory region</param>
+        /// <param name="offsets"></param>
         /// <returns></returns>
-        public bool WriteMemory(IntPtr address, byte[] buffer)
+        public bool WriteMemory(IntPtr address, byte[] buffer, params int[] offsets)
         {
+            address = FindDMAAddy(address, offsets);
             return Native.WriteProcessMemory(ProcHandle, (long)address, buffer, buffer.Length, out _);
+        }
+
+        /// <summary>
+        /// Read a memory address and convert
+        /// </summary>
+        /// <typeparam name="T">Any struct</typeparam>
+        /// <param name="address">Address</param>
+        /// <param name="offsets">Address offsets.</param>
+        /// <returns></returns>
+        public T Read<T>(IntPtr address, params int[] offsets)
+        {
+            //create byte array with size of type
+            byte[] buffer = new byte[Marshal.SizeOf(typeof(T))];
+
+            if (offsets.Length > 1)
+                address = FindDMAAddy(address, offsets);
+
+            if (!ReadMemory(address, buffer))
+                return default;
+
+            GCHandle gHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            T data = (T)Marshal.PtrToStructure(gHandle.AddrOfPinnedObject(), typeof(T));
+            gHandle.Free();
+
+            return data;
+        }
+
+        /// <summary>
+        /// Write a Generic T type to an Address
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="address">Address to write to</param>
+        /// <param name="val">Values to write</param>
+        /// <param name="offsets">Offsets if any.</param>
+        /// <returns>True if memory was sucessfully written</returns>
+        /// <remarks>Note: Can be considered slow when writing trivial things like <see cref="int"/></remarks>
+        public bool Write<T>(IntPtr address, T val, params int[] offsets)
+        {
+            int size = Marshal.SizeOf<T>();
+            byte[] bytes = new byte[size];
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+
+            Marshal.StructureToPtr(val, ptr, false);
+            Marshal.Copy(ptr, bytes, 0, size);
+            Marshal.FreeHGlobal(ptr);
+
+            return WriteMemory(address, bytes, offsets);
         }
 
         /// <summary>

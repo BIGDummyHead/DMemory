@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DummyMemory.Game
 {
@@ -37,7 +33,7 @@ namespace DummyMemory.Game
         /// <returns>Distance between to in world Objects</returns>
         public static float Distance(Vector3 a, Vector3 b)
         {
-            double x = Math.Pow( a.x - b.x, 2);
+            double x = Math.Pow(a.x - b.x, 2);
             double y = Math.Pow(a.y - b.y, 2);
             double z = Math.Pow(a.z - b.z, 2);
 
