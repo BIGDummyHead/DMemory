@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DummyMemory.Inheritance;
+using DummyMemory.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -9,7 +11,7 @@ namespace DummyMemory
     /// <summary>
     /// Core class for doing basic memory operations
     /// </summary>
-    public class Memory : IDisposable
+    public class Memory : GarbageDispose, IGenericMem, IScanner
     {
         /// <summary>
         /// Process 
@@ -54,14 +56,6 @@ namespace DummyMemory
         }
 
         /// <summary>
-        /// Garbage collection
-        /// </summary>
-        ~Memory()
-        {
-            Dispose();
-        }
-
-        /// <summary>
         /// Open process for reading/writing of memory
         /// </summary>
         /// <param name="proc"></param>
@@ -92,7 +86,7 @@ namespace DummyMemory
         /// <summary>
         /// Free up resources.
         /// </summary>
-        public virtual void Dispose()
+        public override void Dispose()
         {
             Proc = null;
             if (Native.CloseHandle(ProcHandle))
@@ -107,10 +101,10 @@ namespace DummyMemory
         /// Used by the constructor to set properties. May only be called when disposed.
         /// </summary>
         /// <param name="proc"></param>
-        public void Open(Process proc)
+        public bool Open(Process proc)
         {
             if (!isDiposed)
-                return;
+                return false;
 
             Proc = proc ?? throw new ArgumentNullException(nameof(proc));
 
@@ -121,6 +115,7 @@ namespace DummyMemory
 
             //reset to false
             isDiposed = false;
+            return true;
         }
 
         /// <summary>
@@ -134,22 +129,7 @@ namespace DummyMemory
         {
             IntPtr addr = FindDMAAddy(address, offsets);
 
-            return ReadMemory(addr, buffer);
-        }
-
-        /// <summary>
-        /// Read memory from an address with offsets.
-        /// </summary>
-        /// <param name="address">The address to read from</param>
-        /// <param name="size">Size of read</param>
-        /// <param name="read">Bytes read</param>
-        /// <param name="offsets"></param>
-        /// <returns></returns>
-        public bool ReadMemory(IntPtr address, int size, out byte[] read, params int[] offsets)
-        {
-            IntPtr addr = FindDMAAddy(address, offsets);
-
-            return ReadMemory(addr, size, out read);
+            return Native.ReadProcessMemory(ProcHandle, (long)addr, buffer, buffer.Length, out _);
         }
 
         /// <summary>
@@ -177,11 +157,7 @@ namespace DummyMemory
             //create byte array with size of type
             byte[] buffer = new byte[Marshal.SizeOf(typeof(T))];
 
-            if (offsets.Length > 1)
-                address = FindDMAAddy(address, offsets);
-
-            if (!ReadMemory(address, buffer))
-                return default;
+            ReadMemory(address, buffer, offsets);
 
             GCHandle gHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
             T data = (T)Marshal.PtrToStructure(gHandle.AddrOfPinnedObject(), typeof(T));
@@ -201,6 +177,17 @@ namespace DummyMemory
         /// <remarks>Note: Can be considered slow when writing trivial things like <see cref="int"/></remarks>
         public bool Write<T>(IntPtr address, T val, params int[] offsets)
         {
+            return WriteMemory(address, GetBytes(val), offsets);
+        }
+
+        /// <summary>
+        /// Turns any type into writeable bytes
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="val">Turn type.</param>
+        /// <returns>Writeable bytes</returns>
+        public byte[] GetBytes<T>(T val)
+        {
             int size = Marshal.SizeOf<T>();
             byte[] bytes = new byte[size];
             IntPtr ptr = Marshal.AllocHGlobal(size);
@@ -209,7 +196,7 @@ namespace DummyMemory
             Marshal.Copy(ptr, bytes, 0, size);
             Marshal.FreeHGlobal(ptr);
 
-            return WriteMemory(address, bytes, offsets);
+            return bytes;
         }
 
         /// <summary>
