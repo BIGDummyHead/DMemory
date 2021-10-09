@@ -58,6 +58,8 @@ static void Main()
     string aob = "FF 0E 57 8B 7C 24 14";
     
     //the bytes we are going to write to our allocated block of memory
+    //optionally we could use a string formatted version of this:
+    //"FF 06 57 8B 7C 24 14";
     byte[] inject =
     {
         0xFF, 0x06, 0x57, 0x8B, 0x7C, 0x24, 0x14
