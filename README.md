@@ -37,3 +37,49 @@ class Program
        public float x, z, y;
     }
 }
+``` 
+
+## Creating Detours
+
+Detours is coined as AoB injection by Cheat Engine, it allows us to essentialy replace the game's code by jumping to a allocated region of memory, and then returning to the next address we just wrote our Jump code to. I've tried to make code caves as friendly as possible by simply supplying basic info about your AoB injection and then being able to say `cave.Inject();` or `cave.Eject();`
+
+Below you can see how to write your own code cave! 
+
+```csharp
+
+using DummyMemory;
+using DummyMemory.Detouring;
+
+//this code cave will simply increase instead of decrease the ammo count.
+static Memory mem = new Memory("ac_client");
+static void Main()
+{
+    //aob pattern to find
+    string aob = "FF 0E 57 8B 7C 24 14";
+    
+    //the bytes we are going to write to our allocated block of memory
+    byte[] inject =
+    {
+        0xFF, 0x06, 0x57, 0x8B, 0x7C, 0x24, 0x14
+    };
+
+    //create a new instance of cave, make sure that the aob has not been changed or written to by another 'Cave' or CheatEngine
+    
+    Cave cave = new Cave(mem, aob, inject, new Cave.Allocation
+    {
+        //size of memory block
+        memorySize = 1000,
+        //replacement size, jmp + nops
+        replacementSize = 7
+    });
+   
+    //inject our cave, bytes from both the address and the region our inserted
+    cave.Inject();
+
+    Console.ReadLine();
+
+    //our region of memory is deallocated and our original bytes are written back to the address
+    cave.Eject();
+}
+```
+
