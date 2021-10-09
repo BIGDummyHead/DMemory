@@ -75,6 +75,18 @@ namespace DummyMemory.Detouring
             M = m;
         }
 
+        /// <summary>
+        /// Create a setup for a cave, with string formed injection
+        /// </summary>
+        /// <param name="m">Used for AoB Scan</param>
+        /// <param name="aobPattern">Pattern to scan for</param>
+        /// <param name="injection">String converted to byte[]</param>
+        /// <param name="alloc">Setting for allocation</param>
+        public Cave(Memory m, string aobPattern, string injection, Allocation alloc) : this(m, aobPattern, CaveBase.Convert(injection), alloc)
+        {
+
+        }
+
 
         /// <summary>
         /// Eject cave, only called when <see cref="IsInjected"/> is true

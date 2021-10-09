@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace DummyMemory.Detouring
 {
@@ -7,6 +8,70 @@ namespace DummyMemory.Detouring
     /// </summary>
     public class CaveBase
     {
+        /// <summary>
+        /// Trys to convert string to byte[]
+        /// </summary>
+        /// <param name="byteFormatted">A string formatted byte string</param>
+        /// <param name="read"></param>
+        /// <returns></returns>
+        public static bool TryConvert(string byteFormatted, out byte[] read)
+        {
+            List<byte> bysRead = new List<byte>();
+
+            foreach (string word in GetWords(byteFormatted))
+            {
+                if(long.TryParse(word, System.Globalization.NumberStyles.HexNumber, null, out long hex))
+                {
+                    bysRead.Add((byte)hex);
+                }
+                else
+                {
+                    read = Array.Empty<byte>();
+                    return false;
+                }
+            }
+
+            read =  bysRead.ToArray();
+            return true;
+        }
+
+        /// <summary>
+        /// Converts string to byte[]
+        /// </summary>
+        /// <param name="byteFormatted"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static byte[] Convert(string byteFormatted)
+        {
+            if (!TryConvert(byteFormatted, out byte[] read))
+                throw new Exception("Failed to convert!");
+            else
+                return read;
+        }
+
+        private static string[] GetWords(string sentence, char sep = ' ')
+        {
+            List<string> wrds = new List<string>();
+
+            string _res = string.Empty;
+
+            foreach (char a in sentence)
+            {
+                if (a == sep)
+                {
+                    wrds.Add(_res);
+                    _res = string.Empty;
+                }
+                else
+                    _res += a;
+            }
+
+            if (_res != string.Empty)
+                wrds.Add(_res);
+
+            return wrds.ToArray();
+        }
+
         /// <summary>
         /// A static instance created in the static constructor.
         /// </summary>
