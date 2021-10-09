@@ -2,73 +2,86 @@
 
 #### This library has simple methods to read and write memory, relies heavily on IntPtr, and has a unique Detouring system using Code Caves.
 
-### Classes 
-
-* Native - PInvokes for kernel32.dll
-* Memory - Features methods for reading and writing memory
-* CaveBase - Base for creating caves, mainly used for calculating what and where to write.
-* Cave - Inherits CaveBase and features methods to easily Inject/Eject your CodeCave
-________________________________________________________________________________________
-
-### Memory Example
+### Copy Me 
 
 ```csharp
 
-//pid
-//new Memory(0);
-//we can pass in a Process 
-Memory mem = new Memory("ac_client");
+using DummyMemory;
 
-IntPtr plyrBase = mem.Base + 0x109B74;
-
-IntPtr ammoAddress = mem.FindDMAAddy(plyrBase, 0x374, 0x14, 0x0);
-
-//byte[] read = new byte[4];
-//mem.ReadMemory(ammoAddress, read);
-
-if( mem.ReadMemory(ammoAddress, 4, out byte[] ammo) )
+class Program
 {
-     int readAmmo = BitConverter.ToInt32(ammo);
-     
-     Console.WriteLine("Player has {0} bullets", readAmmo);
-     
-     if(!mem.WriteMemory(ammoAddress, BitConverter.GetBytes(readAmmo + 10)))
-     {
-        //failed to write to memory
-     }
+    static Memory mem = new Memory("ac_client");
+    static IntPtr PlayerBase => mem.Base + 0x109B74;
+    
+    static void Main()
+    {
+       int offset = 0xF8;
+       
+       //can return default 
+       int health = mem.Read<int>(PlayerBase, offset);
+       
+       bool didWrite = mem.Write<int>(PlayerBase, 100 + health, offset);
+    }
+    
+    static Vector3 GetPlayerPos()
+    {
+        int offset = 34;
+        
+        //we can even use the Write<T> to do the same thing
+        //mem.Write<Vector3>(PlayerBase, vec3, offset);
+        return mem.Read<Vector3>(PlayerBase, offset);
+    }
+    
+    public Vector3
+    {
+       public float x, z, y;
+    }
+}
+``` 
+
+## Creating Detours
+
+Detours is coined as AoB injection by Cheat Engine, it allows us to essentialy replace the game's code by jumping to a allocated region of memory, and then returning to the next address we just wrote our Jump code to. I've tried to make code caves as friendly as possible by simply supplying basic info about your AoB injection and then being able to say `cave.Inject();` or `cave.Eject();`
+
+Below you can see how to write your own code cave! 
+
+```csharp
+
+using DummyMemory;
+using DummyMemory.Detouring;
+
+//this code cave will simply increase instead of decrease the ammo count.
+static Memory mem = new Memory("ac_client");
+static void Main()
+{
+    //aob pattern to find
+    string aob = "FF 0E 57 8B 7C 24 14";
+    
+    //the bytes we are going to write to our allocated block of memory
+    //optionally we could use a string formatted version of this:
+    //"FF 06 57 8B 7C 24 14";
+    byte[] inject =
+    {
+        0xFF, 0x06, 0x57, 0x8B, 0x7C, 0x24, 0x14
+    };
+
+    //create a new instance of cave, make sure that the aob has not been changed or written to by another 'Cave' or CheatEngine
+    
+    Cave cave = new Cave(mem, aob, inject, new Cave.Allocation
+    {
+        //size of memory block
+        memorySize = 1000,
+        //replacement size, jmp + nops
+        replacementSize = 7
+    });
+   
+    //inject our cave, bytes from both the address and the region our inserted
+    cave.Inject();
+
+    Console.ReadLine();
+
+    //our region of memory is deallocated and our original bytes are written back to the address
+    cave.Eject();
 }
 ```
 
-### Code Cave Example
-
-```csharp
-            //what to write to allocated space
-            byte[] inject =
-            {
-                0xFF, 0x06, 0x57, 0x8B, 0x7C, 0x24, 0x14
-            };
-            
-            //area of bytes
-            string aob = "FF 0E 57 8B 7C 24 14 8D 74 24 28 E8 87";
-            
-            //our memory
-            Memory mem = new Memory("ac_client");
-
-            Cave cave = new Cave(mem, aob, inject, new Cave.Allocation 
-            {
-                //settings for memory block
-                memorySize = 1000,
-                //how many times to nop + 5 for jmp
-                replacementSize = 7
-            });
-            
-            //Creates a cave to jmp to the allocated memory region
-            cave.Inject();
-            
-            Console.ReadKey();
-            
-            //Rewrites the original byte[] and deallocates the memory region
-            cave.Eject();
-            
-```            
-            
