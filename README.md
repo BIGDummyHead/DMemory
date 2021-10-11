@@ -2,7 +2,7 @@
 
 #### This library has simple methods to read and write memory, relies heavily on IntPtr, and has a unique Detouring system using Code Caves.
 
-This package is available on Nuget for x86 and x64 archetypes. [DM.dll](https://www.nuget.org/packages?q=DM-) on Nuget.
+This package is available on Nuget for x86 and x64 archetypes. [DM.dll](https://www.nuget.org/packages?q=DM-) on Nuget. This package now works on Nuget, it did not have the correct file structure.
 
 ### Copy Me 
 
