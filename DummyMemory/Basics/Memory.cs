@@ -181,7 +181,7 @@ namespace DummyMemory
         }
 
         /// <summary>
-        /// Turns any type into writeable bytes
+        /// Turns a type into writeable bytes
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="val">Turn type.</param>
