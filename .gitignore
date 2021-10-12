@@ -10,6 +10,8 @@
 *.userosscache
 *.sln.docstates
 nuget.config
+upload.bat
+Nuget/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
