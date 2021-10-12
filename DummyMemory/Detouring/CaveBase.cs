@@ -20,7 +20,7 @@ namespace DummyMemory.Detouring
 
             foreach (string word in GetWords(byteFormatted))
             {
-                if(long.TryParse(word, System.Globalization.NumberStyles.HexNumber, null, out long hex))
+                if (long.TryParse(word, System.Globalization.NumberStyles.HexNumber, null, out long hex))
                 {
                     bysRead.Add((byte)hex);
                 }
@@ -31,7 +31,7 @@ namespace DummyMemory.Detouring
                 }
             }
 
-            read =  bysRead.ToArray();
+            read = bysRead.ToArray();
             return true;
         }
 
