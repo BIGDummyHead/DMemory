@@ -3,7 +3,7 @@
 namespace DummyMemory.Inheritance
 {
     /// <summary>
-    /// Garbage Disposal
+    /// A class that you can inherit that will automatically dispose when the <see cref="GC.Collect()"/> is called
     /// </summary>
     public class GarbageDispose : IDisposable
     {
