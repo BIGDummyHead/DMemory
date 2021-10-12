@@ -2,7 +2,7 @@
 
 #### This library has simple methods to read and write memory, relies heavily on IntPtr, and has a unique Detouring system using Code Caves.
 
-This package is available on Nuget for x86 and x64 archetypes. [DM.dll](https://www.nuget.org/packages?q=DM-) on Nuget. This package now works on Nuget, it did not have the correct file structure.
+This package has a nuget source which can be found [here](https://github.com/BIGDummyHead?tab=packages&repo_name=Dummy-Memory)
 
 #### This branch describes different methods that may be used for in-game purposes. Things that describes objects that are in all games will be described on this branch. This branch does not contain the proper compiled dlls for it, you will have to compile them yourself until this branch is marked complete.
 
