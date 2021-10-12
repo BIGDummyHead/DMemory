@@ -4,7 +4,7 @@
 
 This package is available on Nuget for x86 and x64 archetypes. [DM.dll](https://www.nuget.org/packages?q=DM-) on Nuget. This package now works on Nuget, it did not have the correct file structure.
 
-#### This branch describes different methods that may be used for in-game purposes. Things that describes objects that are in all games will be described on this branch.
+#### This branch describes different methods that may be used for in-game purposes. Things that describes objects that are in all games will be described on this branch. This branch does not contain the proper compiled dlls for it, you will have to compile them yourself until this branch is marked complete.
 
 ### Copy Me 
 
