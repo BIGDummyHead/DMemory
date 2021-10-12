@@ -94,6 +94,7 @@
     <Compile Include="Detouring\Cave.cs" />
     <Compile Include="Detouring\CaveBase.cs" />
     <Compile Include="Basics\Native.cs" />
+    <Compile Include="Game\Matrix.cs" />
     <Compile Include="Game\Vector2.cs" />
     <Compile Include="Game\Vector3.cs" />
     <Compile Include="Inheritance\GarbageDispose.cs" />
