@@ -4,7 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
+using System.Text;
+using System.Threading;
 
 namespace DummyMemory
 {
@@ -56,30 +60,94 @@ namespace DummyMemory
         }
 
         /// <summary>
+        /// Checks if the Current Program is in Admin mode
+        /// </summary>
+        /// <remarks>If false, may make some methods invalid for use</remarks>
+        public static bool Admin
+        {
+            get
+            {
+                using (WindowsIdentity id = WindowsIdentity.GetCurrent())
+                {
+                    WindowsPrincipal princ = new WindowsPrincipal(id);
+                    return princ.IsInRole(WindowsBuiltInRole.Administrator);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Refreshes and checks if the process has closed.
+        /// </summary>
+        /// <param name="proc">Process to check</param>
+        /// <returns></returns>
+        public static bool IsOpen(Process proc)
+        {
+            if (proc == null)
+                return false;
+
+            proc.Refresh();
+
+            return !proc.HasExited;
+        }
+
+        /// <summary>
+        /// Refreshes and checks if the process has closed.
+        /// </summary>
+        /// <param name="pid">Process ID to find and check</param>
+        /// <returns></returns>
+        public static bool IsOpen(int pid)
+        {
+            return IsOpen(Process.GetProcessById(pid));
+        }
+
+        /// <summary>
+        /// Refreshes and checks if the process has closed.
+        /// </summary>
+        /// <param name="procName">Process to find and check</param>
+        /// <returns></returns>
+        public static bool IsOpen(string procName)
+        {
+            Process[] procs;
+            if ((procs = Process.GetProcessesByName(procName)).Length == 0)
+                return false;
+
+            return IsOpen(procs[0]);
+        }
+
+        /// <summary>
+        /// VM OPERATION | VM WRITE | VM READ
+        /// </summary>
+        /// <remarks>0x38</remarks>
+        public const Native.ProcessAccessFlags Access = Native.ProcessAccessFlags.VirtualMemoryOperation | Native.ProcessAccessFlags.VirtualMemoryWrite | Native.ProcessAccessFlags.VirtualMemoryRead;
+
+        /// <summary>
         /// Open process for reading/writing of memory
         /// </summary>
         /// <param name="proc"></param>
-        public Memory(Process proc)
+        /// <param name="access"></param>
+        public Memory(Process proc, Native.ProcessAccessFlags access = Access)
         {
-            Open(proc);
+            Open(proc, access);
         }
 
         /// <summary>
         /// Get proc by pid
         /// </summary>
         /// <param name="pid">Process ID</param>
-        public Memory(int pid)
+        /// <param name="access"></param>
+        public Memory(int pid, Native.ProcessAccessFlags access = Access)
         {
-            Open(Process.GetProcessById(pid));
+            Open(Process.GetProcessById(pid), access);
         }
 
         /// <summary>
         /// Get proc by name
         /// </summary>
         /// <param name="procName">Process Name</param>
-        public Memory(string procName)
+        /// <param name="access"></param>
+        public Memory(string procName, Native.ProcessAccessFlags access = Access)
         {
-            Open(GetProcess(procName));
+            Open(GetProcess(procName), access);
         }
 
         bool isDiposed = true;
@@ -101,14 +169,15 @@ namespace DummyMemory
         /// Used by the constructor to set properties. May only be called when disposed.
         /// </summary>
         /// <param name="proc"></param>
-        public bool Open(Process proc)
+        /// <param name="access"></param>
+        public bool Open(Process proc, Native.ProcessAccessFlags access)
         {
             if (!isDiposed)
                 return false;
 
             Proc = proc ?? throw new ArgumentNullException(nameof(proc));
 
-            ProcHandle = Native.OpenProcess(0x38, false, proc.Id);
+            ProcHandle = Native.OpenProcess((uint)access, false, proc.Id);
 
             if (ProcHandle == IntPtr.Zero)
                 throw new Exception("Process could not be opened and resulted in Process Handle being null.");
@@ -142,7 +211,7 @@ namespace DummyMemory
         public bool WriteMemory(IntPtr address, byte[] buffer, params int[] offsets)
         {
             address = FindDMAAddy(address, offsets);
-            return Native.WriteProcessMemory(ProcHandle, (long)address, buffer, buffer.Length, out _);
+            return Native.WriteProcessMemory(ProcHandle, address, buffer, buffer.Length, out _);
         }
 
         /// <summary>
@@ -304,6 +373,97 @@ namespace DummyMemory
             return GetModule(moduleName, comparer).BaseAddress;
         }
 
+        /// <summary>
+        /// Inject dll into running process
+        /// </summary>
+        /// <param name="proc"></param>
+        /// <param name="dllPath"></param>
+        /// <returns></returns>
+        public static InjectionStatus Inject(Process proc, string dllPath)
+        {
+            if (!File.Exists(dllPath))
+                return InjectionStatus.DllDoesNotExist;
+
+            if (!Admin)
+                return InjectionStatus.NotAdmin;
+
+            IntPtr hProc = Native.OpenProcess(proc, Native.ProcessAccessFlags.All);
+
+            if (hProc == IntPtr.Zero)
+                return InjectionStatus.BadPointer;
+
+            int size = (dllPath.Length + 1) * Marshal.SizeOf(typeof(char));
+
+            IntPtr alloc = Native.VirtualAllocEx(hProc, IntPtr.Zero, size, Native.AllocationType.Commit | Native.AllocationType.Reserve, Native.MemoryProtection.ReadWrite);
+
+            if (alloc == IntPtr.Zero)
+                return InjectionStatus.BadPointer;
+
+            Native.WriteProcessMemory(hProc, alloc, Encoding.Default.GetBytes(dllPath), size, out _);
+
+            IntPtr module = Native.GetProcAddress(Native.GetModuleHandle("kernel32.dll"), "LoadLibraryA");
+
+            if (module == IntPtr.Zero)
+                return InjectionStatus.BadPointer;
+
+            //at this point forward all is injected
+            IntPtr hThread = Native.CreateRemoteThread(hProc, IntPtr.Zero, 0, module, alloc, 0, out _);
+
+            //2 close fails occured
+            if (!Native.CloseHandle(hProc))
+                return InjectionStatus.CloseFail_Injected;
+
+            //hThread == IntPtr.Zero
+            if (hThread == IntPtr.Zero)
+                return InjectionStatus.CloseFail_Injected | InjectionStatus.BadPointer;
+
+            //close final handle
+            if (!Native.CloseHandle(hThread))
+                return InjectionStatus.CloseFail_Injected;
+
+            return InjectionStatus.Injected;
+        }
+
+        /// <summary>
+        /// Inject dll into running process
+        /// </summary>
+        /// <param name="dllPath">Dll to inject</param>
+        /// <returns></returns>
+        public InjectionStatus Inject(string dllPath)
+        {
+            return Inject(Proc, dllPath);
+        }
+
+
+        /// <summary>
+        /// Status of Injection
+        /// </summary>
+        [Flags]
+        public enum InjectionStatus : int
+        {
+            /// <summary>
+            /// Dll does not exist
+            /// </summary>
+            DllDoesNotExist = -2,
+            /// <summary>
+            /// You are not an admin
+            /// </summary>
+            NotAdmin = -1,
+            /// <summary>
+            /// Pointer was equal to 0
+            /// </summary>
+            BadPointer = 1,
+            /// <summary>
+            /// Injection success!
+            /// </summary>
+            Injected = 10,
+            /// <summary>
+            /// Injection success, Handle(s) failed to close
+            /// </summary>
+            CloseFail_Injected = 20
+        }
+
+        
     }
 }
 

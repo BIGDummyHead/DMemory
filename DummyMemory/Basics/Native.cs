@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace DummyMemory
 {
@@ -9,6 +10,11 @@ namespace DummyMemory
     /// </summary>
     public static class Native
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        public const int MAX_PATH = 260;
+
         /// <summary>
         /// Used to represent of a window.
         /// </summary>
@@ -242,12 +248,57 @@ namespace DummyMemory
         public static extern IntPtr OpenProcess(uint dwAccess, bool inherit, int pid);
 
         /// <summary>
+        /// Get Process Address
+        /// </summary>
+        /// <param name="hModule"></param>
+        /// <param name="procName"></param>
+        /// <returns></returns>
+        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
+        public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
+        
+       
+
+
+        /// <summary>
+        /// Get Module Handle from module name
+        /// </summary>
+        /// <param name="lpModuleName"></param>
+        /// <returns></returns>
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        /// <summary>
+        /// Create a remote thread
+        /// </summary>
+        /// <param name="hProcess">Process Handle</param>
+        /// <param name="lpThreadAttributes">Threads attributes</param>
+        /// <param name="dwStackSize">DWORD Stack Size</param>
+        /// <param name="lpStartAddress"></param>
+        /// <param name="lpParameter"></param>
+        /// <param name="dwCreationFlags">DWORD Creation Flags</param>
+        /// <param name="lpThreadId"></param>
+        /// <returns></returns>
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, out IntPtr lpThreadId);
+
+        /// <summary>
+        /// Free Library
+        /// </summary>
+        /// <param name="hModule"></param>
+        /// <returns></returns>
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool FreeLibrary(IntPtr hModule);
+
+        /// <summary>
         /// Get <see cref="IntPtr"/> for process
         /// </summary>
         /// <param name="proc">The process to open</param>
         /// <param name="flags">Access Flags</param>
+        /// <param name="inherit">Inherit Handle</param>
         /// <returns></returns>
-        public static IntPtr OpenProcess(Process proc, ProcessAccessFlags flags) => OpenProcess((uint)flags, false, proc.Id);
+        public static IntPtr OpenProcess(Process proc, ProcessAccessFlags flags, bool inherit = false) => OpenProcess((uint)flags, inherit, proc.Id);
 
         /// <summary>
         /// Close process handle
@@ -308,7 +359,7 @@ namespace DummyMemory
         /// <param name="lpNumberOfBytesWritten">How many bytes were really written?</param>
         /// <returns></returns>
         [DllImport("kernel32.dll")]
-        public static extern bool WriteProcessMemory(IntPtr hProcess, long lpBaseAddress, [In, Out] byte[] lpBuffer, int dwSize, out IntPtr lpNumberOfBytesWritten);
+        public static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [In, Out] byte[] lpBuffer, int dwSize, out IntPtr lpNumberOfBytesWritten);
 
         /// <summary>
         /// Write bytes to a memory address
@@ -317,7 +368,7 @@ namespace DummyMemory
         /// <param name="lpBaseAddress">Address to start write</param>
         /// <param name="write">Bytes to write</param>
         /// <returns></returns>
-        public static bool WriteProcessMemory(IntPtr hProcess, long lpBaseAddress, [In, Out] byte[] write)
+        public static bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [In, Out] byte[] write)
         {
             return WriteProcessMemory(hProcess, lpBaseAddress, write, write.Length, out _);
         }

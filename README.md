@@ -87,3 +87,28 @@ static void Main()
 }
 ```
 
+## Injecting DLLs
+
+Injecting DLLs can sometimes be frustrating in C# so I've made it pretty simple in this latest update. But you'll have to run your Program in ADMIN mode to inject them.
+Let's take a look at some of the results you may get when injecting your own dll.
+
+* Dll Does Not Exist - The dll you requested to inject does not exist
+* Not Admin - Your program is not in Administrator mode
+* Bad Pointer - One of the pointers when injecting your Dll was equal to 0
+* Injected - No errors happened!
+* Close Fail Injected - Handle(s) from your injection were not properly closed
+
+So how do we do it?
+
+We can either do it throught a static method or through an instance of Memory.cs as such
+
+```csharp
+
+Memory m = new Memory("ac_client");
+//there you go you sucessfully injected your dll
+Memory.InjectionStatus status = m.Inject("C:\\Path\\target.dll");
+
+//or
+Memory.InjectionStatus status = Memory.Inject(Process.GetProcessesByName("ac_client")[0], "C:\\Path\\target.dll");
+
+```
