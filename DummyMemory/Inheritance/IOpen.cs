@@ -12,7 +12,8 @@ namespace DummyMemory.Interfaces
         /// Open a process here
         /// </summary>
         /// <param name="proc"></param>
-        bool Open(Process proc);
+        /// <param name="access"></param>
+        bool Open(Process proc, Native.ProcessAccessFlags access);
         /// <summary>
         /// Search a process for it's module by name.
         /// </summary>
