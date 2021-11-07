@@ -4,7 +4,7 @@ using System.Linq;
 namespace DummyMemory.Detouring
 {
     /// <summary>
-    /// Class for creating caves easily 
+    /// An extension of the <see cref="CaveBase"/> not required by any means, but gives a simplified structure for injection/ejection without worrying about writing fails
     /// </summary>
     public sealed class Cave : CaveBase
     {

@@ -13,14 +13,15 @@ namespace DummyMemory.Detouring
         /// </summary>
         /// <param name="byteFormatted">A string formatted byte string</param>
         /// <param name="read"></param>
+        /// <param name="byteSeperator">Determines how the string will be split</param>
         /// <returns></returns>
-        public static bool TryConvert(string byteFormatted, out byte[] read)
+        public static bool TryConvert(string byteFormatted, out byte[] read, char byteSeperator = ' ')
         {
             List<byte> bysRead = new List<byte>();
 
-            foreach (string word in GetWords(byteFormatted))
+            foreach (string word in byteFormatted.Split(byteSeperator))
             {
-                if(long.TryParse(word, System.Globalization.NumberStyles.HexNumber, null, out long hex))
+                if (long.TryParse(word, System.Globalization.NumberStyles.HexNumber, null, out long hex))
                 {
                     bysRead.Add((byte)hex);
                 }
@@ -31,45 +32,23 @@ namespace DummyMemory.Detouring
                 }
             }
 
-            read =  bysRead.ToArray();
+            read = bysRead.ToArray();
             return true;
         }
 
         /// <summary>
-        /// Converts string to byte[]
+        /// Converts string to byte[], does not error check
         /// </summary>
         /// <param name="byteFormatted"></param>
+        /// <param name="byteSeperator">Determines the char to split the formatted byte[]</param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public static byte[] Convert(string byteFormatted)
+        public static byte[] Convert(string byteFormatted, char byteSeperator = ' ')
         {
-            if (!TryConvert(byteFormatted, out byte[] read))
+            if (!TryConvert(byteFormatted, out byte[] read, byteSeperator))
                 throw new Exception("Failed to convert!");
-            else
-                return read;
-        }
 
-        private static string[] GetWords(string sentence, char sep = ' ')
-        {
-            List<string> wrds = new List<string>();
-
-            string _res = string.Empty;
-
-            foreach (char a in sentence)
-            {
-                if (a == sep)
-                {
-                    wrds.Add(_res);
-                    _res = string.Empty;
-                }
-                else
-                    _res += a;
-            }
-
-            if (_res != string.Empty)
-                wrds.Add(_res);
-
-            return wrds.ToArray();
+            return read;
         }
 
         /// <summary>
@@ -92,7 +71,7 @@ namespace DummyMemory.Detouring
         public virtual byte[] GetJump(IntPtr codePtr, IntPtr jmpAlloc, int replacementSize)
         {
             if (replacementSize < 5)
-                throw new Exception("Replacement Size Invalid");
+                throw new Exception("Replacement size is invalid for jump, must be greater than or equal to 5");
 
             replacementSize -= 5;
 
@@ -158,6 +137,7 @@ namespace DummyMemory.Detouring
         /// <param name="inject">Bytes to inject</param>
         /// <param name="injectionPoint">Information on what to write at injection site.</param>
         /// <param name="allocPoint">Information on what to write at the allocated space.</param>
+        //set up information for writing to the address later, no need to write instantly 
         public virtual void Create(IntPtr codePtr, IntPtr allocated, int replacementSize, byte[] inject,
         out Info injectionPoint,
         out Info allocPoint)

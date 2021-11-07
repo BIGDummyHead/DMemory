@@ -17,24 +17,7 @@ namespace DummyMemory
     /// </summary>
     public class Memory : GarbageDispose, IGenericMem, IScanner
     {
-        /// <summary>
-        /// Process 
-        /// </summary>
-        public Process Proc { get; private set; }
-        /// <summary>
-        /// Main module base address
-        /// </summary>
-        public IntPtr Base => Proc.MainModule.BaseAddress;
-        /// <summary>
-        /// Process Handle, used for most basic operations
-        /// </summary>
-        public IntPtr Handle => Proc.Handle;
-
-        /// <summary>
-        /// The handle when the process is opened
-        /// </summary>
-        public IntPtr ProcHandle { get; private set; }
-
+        #region Static
         /// <summary>
         /// Get a process under certain requirements using a delegate.
         /// </summary>
@@ -115,6 +98,79 @@ namespace DummyMemory
         }
 
         /// <summary>
+        /// Inject dll into running process
+        /// </summary>
+        /// <param name="proc"></param>
+        /// <param name="dllPath"></param>
+        /// <returns></returns>
+        public static InjectionStatus Inject(Process proc, string dllPath)
+        {
+            if (!File.Exists(dllPath))
+                return InjectionStatus.DllDoesNotExist;
+
+            if (!Admin)
+                return InjectionStatus.NotAdmin;
+
+            IntPtr hProc = Native.OpenProcess(proc, Native.ProcessAccessFlags.All);
+
+            if (hProc == IntPtr.Zero)
+                return InjectionStatus.BadPointer;
+
+            int size = (dllPath.Length + 1) * Marshal.SizeOf(typeof(char));
+
+            IntPtr alloc = Native.VirtualAllocEx(hProc, IntPtr.Zero, size, Native.AllocationType.Commit | Native.AllocationType.Reserve, Native.MemoryProtection.ReadWrite);
+
+            if (alloc == IntPtr.Zero)
+                return InjectionStatus.BadPointer;
+
+            Native.WriteProcessMemory(hProc, alloc, Encoding.Default.GetBytes(dllPath), size, out _);
+
+            IntPtr module = Native.GetProcAddress(Native.GetModuleHandle("kernel32.dll"), "LoadLibraryA");
+
+            if (module == IntPtr.Zero)
+                return InjectionStatus.BadPointer;
+
+            //at this point forward all is injected
+            IntPtr hThread = Native.CreateRemoteThread(hProc, IntPtr.Zero, 0, module, alloc, 0, out _);
+
+            //2 close fails occured
+            if (!Native.CloseHandle(hProc))
+                return InjectionStatus.CloseFail_Injected;
+
+            //hThread == IntPtr.Zero
+            if (hThread == IntPtr.Zero)
+                return InjectionStatus.CloseFail_Injected | InjectionStatus.BadPointer;
+
+            //close final handle
+            if (!Native.CloseHandle(hThread))
+                return InjectionStatus.CloseFail_Injected;
+
+            return InjectionStatus.Injected;
+        }
+        #endregion
+
+        #region Props
+        /// <summary>
+        /// Process 
+        /// </summary>
+        public Process Proc { get; private set; }
+        /// <summary>
+        /// Main module base address
+        /// </summary>
+        public IntPtr Base => Proc.MainModule.BaseAddress;
+        /// <summary>
+        /// Process Handle, used for most basic operations
+        /// </summary>
+        public IntPtr Handle => Proc.Handle;
+
+        /// <summary>
+        /// The handle when the process is opened
+        /// </summary>
+        public IntPtr ProcHandle { get; private set; }
+        #endregion
+
+        #region Constructors
+        /// <summary>
         /// VM OPERATION | VM WRITE | VM READ
         /// </summary>
         /// <remarks>0x38</remarks>
@@ -150,6 +206,7 @@ namespace DummyMemory
             Open(GetProcess(procName), access);
         }
 
+
         bool isDiposed = true;
         /// <summary>
         /// Free up resources.
@@ -162,7 +219,7 @@ namespace DummyMemory
 
             isDiposed = true;
         }
-
+        #endregion
 
 
         /// <summary>
@@ -373,56 +430,7 @@ namespace DummyMemory
             return GetModule(moduleName, comparer).BaseAddress;
         }
 
-        /// <summary>
-        /// Inject dll into running process
-        /// </summary>
-        /// <param name="proc"></param>
-        /// <param name="dllPath"></param>
-        /// <returns></returns>
-        public static InjectionStatus Inject(Process proc, string dllPath)
-        {
-            if (!File.Exists(dllPath))
-                return InjectionStatus.DllDoesNotExist;
-
-            if (!Admin)
-                return InjectionStatus.NotAdmin;
-
-            IntPtr hProc = Native.OpenProcess(proc, Native.ProcessAccessFlags.All);
-
-            if (hProc == IntPtr.Zero)
-                return InjectionStatus.BadPointer;
-
-            int size = (dllPath.Length + 1) * Marshal.SizeOf(typeof(char));
-
-            IntPtr alloc = Native.VirtualAllocEx(hProc, IntPtr.Zero, size, Native.AllocationType.Commit | Native.AllocationType.Reserve, Native.MemoryProtection.ReadWrite);
-
-            if (alloc == IntPtr.Zero)
-                return InjectionStatus.BadPointer;
-
-            Native.WriteProcessMemory(hProc, alloc, Encoding.Default.GetBytes(dllPath), size, out _);
-
-            IntPtr module = Native.GetProcAddress(Native.GetModuleHandle("kernel32.dll"), "LoadLibraryA");
-
-            if (module == IntPtr.Zero)
-                return InjectionStatus.BadPointer;
-
-            //at this point forward all is injected
-            IntPtr hThread = Native.CreateRemoteThread(hProc, IntPtr.Zero, 0, module, alloc, 0, out _);
-
-            //2 close fails occured
-            if (!Native.CloseHandle(hProc))
-                return InjectionStatus.CloseFail_Injected;
-
-            //hThread == IntPtr.Zero
-            if (hThread == IntPtr.Zero)
-                return InjectionStatus.CloseFail_Injected | InjectionStatus.BadPointer;
-
-            //close final handle
-            if (!Native.CloseHandle(hThread))
-                return InjectionStatus.CloseFail_Injected;
-
-            return InjectionStatus.Injected;
-        }
+       
 
         /// <summary>
         /// Inject dll into running process

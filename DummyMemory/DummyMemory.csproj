@@ -99,6 +99,7 @@
     <Compile Include="Inheritance\IGenericMem.cs" />
     <Compile Include="Inheritance\IOpen.cs" />
     <Compile Include="Inheritance\IScanner.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
