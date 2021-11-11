@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace DummyMemory.Detouring
@@ -52,6 +53,38 @@ namespace DummyMemory.Detouring
         /// </summary>
         public bool IsEjected => !IsInjected;
 
+
+        /// <summary>
+        /// Create a code cave at a specific address
+        /// </summary>
+        /// <param name="m">Used for reading mem</param>
+        /// <param name="addr">Address to start injection</param>
+        /// <param name="injection">Bytes to write</param>
+        /// <param name="alloc">Settings for allocation</param>
+        public Cave(Memory m, IntPtr addr, byte[] injection, Allocation alloc)
+        {
+            originalAddr = addr;
+
+            if (addr == IntPtr.Zero)
+                throw new Exception("Original Address may not be null");
+
+            Injection = injection;
+            m_alloc = alloc;
+
+            originalBytes = new byte[alloc.replacementSize];
+            m.ReadMemory(originalAddr, originalBytes);
+            M = m;
+        }
+
+        /// <summary>
+        /// Create a code cave at a specific address
+        /// </summary>
+        /// <param name="m">Used for reading mem</param>
+        /// <param name="addr">Address to start injection</param>
+        /// <param name="injection">Bytes to write in string form</param>
+        /// <param name="alloc">Settings for allocation</param>
+        public Cave(Memory m, IntPtr addr, string injection, Allocation alloc) : this(m, addr, Convert(injection), alloc) { }
+
         /// <summary>
         /// Create the setup for a cave.
         /// </summary>
@@ -59,21 +92,7 @@ namespace DummyMemory.Detouring
         /// <param name="aobPattern">Pattern to scan for</param>
         /// <param name="injection">Bytes to write to allocated space</param>
         /// <param name="alloc">Settings for allocation</param>
-        public Cave(Memory m, string aobPattern, byte[] injection, Allocation alloc)
-        {
-            Injection = injection;
-            m_alloc = alloc;
-
-            //figure out aob scan for later.
-            originalAddr = m.AoB(aobPattern).FirstOrDefault();
-
-            if (originalAddr == IntPtr.Zero)
-                throw new Exception("Area of byte scan failed.");
-
-            originalBytes = new byte[alloc.replacementSize];
-            m.ReadMemory(originalAddr, originalBytes);
-            M = m;
-        }
+        public Cave(Memory m, string aobPattern, byte[] injection, Allocation alloc) : this(m, m.AoB(aobPattern).FirstOrDefault(), injection, alloc) { }
 
         /// <summary>
         /// Create a setup for a cave, with string formed injection
@@ -82,10 +101,8 @@ namespace DummyMemory.Detouring
         /// <param name="aobPattern">Pattern to scan for</param>
         /// <param name="injection">String converted to byte[]</param>
         /// <param name="alloc">Setting for allocation</param>
-        public Cave(Memory m, string aobPattern, string injection, Allocation alloc) : this(m, aobPattern, CaveBase.Convert(injection), alloc)
-        {
+        public Cave(Memory m, string aobPattern, string injection, Allocation alloc) : this(m, aobPattern, CaveBase.Convert(injection), alloc) { }
 
-        }
 
 
         /// <summary>

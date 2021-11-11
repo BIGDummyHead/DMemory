@@ -277,7 +277,7 @@ namespace DummyMemory
         /// <typeparam name="T">Any struct</typeparam>
         /// <param name="address">Address</param>
         /// <param name="offsets">Address offsets.</param>
-        /// <returns></returns>
+        /// <returns>The value of the read address</returns>
         public T Read<T>(IntPtr address, params int[] offsets)
         {
             //create byte array with size of type
@@ -285,11 +285,7 @@ namespace DummyMemory
 
             ReadMemory(address, buffer, offsets);
 
-            GCHandle gHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            T data = (T)Marshal.PtrToStructure(gHandle.AddrOfPinnedObject(), typeof(T));
-            gHandle.Free();
-
-            return data;
+            return Convert<T>(buffer);
         }
 
         /// <summary>
@@ -312,6 +308,7 @@ namespace DummyMemory
         /// <typeparam name="T"></typeparam>
         /// <param name="val">Turn type.</param>
         /// <returns>Writeable bytes</returns>
+        /// <remarks>This maybe invalid for some types that the <see cref="Marshal"/> cannot handle.</remarks>
         public byte[] GetBytes<T>(T val)
         {
             int size = Marshal.SizeOf<T>();
@@ -323,6 +320,21 @@ namespace DummyMemory
             Marshal.FreeHGlobal(ptr);
 
             return bytes;
+        }
+
+        /// <summary>
+        /// Converts a byte[] to a <typeparamref name="T"/> but has limitations as does the <see cref="Read{T}(IntPtr, int[])"/> method
+        /// </summary>
+        /// <typeparam name="T">Conversion type</typeparam>
+        /// <param name="conv">Bytes to T</param>
+        /// <returns></returns>
+        public T Convert<T>(byte[] conv)
+        {
+            GCHandle gHandle = GCHandle.Alloc(conv, GCHandleType.Pinned);
+            T data = (T)Marshal.PtrToStructure(gHandle.AddrOfPinnedObject(), typeof(T));
+            gHandle.Free();
+
+            return data;
         }
 
         /// <summary>
@@ -349,40 +361,48 @@ namespace DummyMemory
 
         private bool CheckPattern(string pattern, byte[] array2check)
         {
-            string[] strBytes = pattern.Split(' ');
-            int x = 0;
-            foreach (byte b in array2check)
+            string[] eachByte = pattern.Split(' ');
+            for (int i = 0; i < array2check.Length; i++)
             {
-                if (strBytes[x] == "?" || strBytes[x] == "??")
-                {
-                    x++;
-                }
-                else if (byte.Parse(strBytes[x], NumberStyles.HexNumber) == b)
-                {
-                    x++;
-                }
-                else
-                {
+                byte b = array2check[i];
+                string s = eachByte[i];
+
+                //is the pattern wild? save this for other measures.
+                bool isWildcard = s != "?" || s != "??";
+
+                //if the pattern byte is a wild card we know the parse will return false so we just continue to the next iteration
+                if (isWildcard)
+                    continue;
+
+                //we know that the pattern byte is not a wild card so we will check for a parse here.
+                if (!byte.TryParse(s, out byte res))
                     return false;
-                }
+
+                //compare the byte and the parsed byte
+                if (res != b)
+                    return false;
             }
+
             return true;
         }
 
         /// <summary>
-        /// Scan for an AoB.
+        /// Scan for a unique area of bytes, this is not reserved for one module but the process
         /// </summary>
-        /// <param name="pattern"></param>
-        /// <returns></returns>
-        /// <remarks>From Guided Hacking</remarks>
-        public IEnumerable<IntPtr> AoB(string pattern)
+        /// <param name="pattern">byte[] pattern</param>
+        /// <param name="start">Start of the module</param>
+        /// <param name="end">End of the module, set to <see cref="int.MaxValue"/></param>
+        /// <returns>Addresses that match the byte pattern</returns>
+        /// <remarks>Can take a long time when scanning the entire process.</remarks>
+        public IEnumerable<IntPtr> AoB(string pattern, int start = 0, int end = int.MaxValue)
         {
-            ProcessModule mod = Proc.MainModule;
-            byte[] moduleMemory = new byte[mod.ModuleMemorySize];
-            Native.ReadProcessMemory(ProcHandle, (long)Base, moduleMemory, mod.ModuleMemorySize, out _);
-
             string[] splitPattern = pattern.Split(' ');
 
+            byte[] moduleMemory = new byte[start];
+
+            Native.ReadProcessMemory(ProcHandle, start, moduleMemory, end, out _);
+
+            //module memory is byte[]
             for (int y = 0; y < moduleMemory.Length; y++)
             {
                 if (moduleMemory[y] == byte.Parse(splitPattern[0], NumberStyles.HexNumber))
@@ -394,7 +414,7 @@ namespace DummyMemory
                     }
                     if (CheckPattern(pattern, checkArray))
                     {
-                        yield return (IntPtr)((uint)mod.BaseAddress + y);
+                        yield return (IntPtr)((uint)start + y);
                     }
                     else
                     {
@@ -403,6 +423,32 @@ namespace DummyMemory
                 }
             }
         }
+
+        /// <summary>
+        /// Scan for an AoB using start as <see cref="ProcessModule.BaseAddress"/> and using end as <see cref="ProcessModule.ModuleMemorySize"/>
+        /// </summary>
+        /// <param name="pattern">byte[] pattern</param>
+        /// <param name="module">Process module that is included in the <see cref="Proc"/></param>
+        /// <returns>Addresses that match the byte pattern</returns>
+        public IEnumerable<IntPtr> ModuleAoB(string pattern, ProcessModule module)
+        {
+            if (!Proc.Modules.Contains(module))
+                return Array.Empty<IntPtr>();
+
+            return AoB(pattern, (int)module.BaseAddress, module.ModuleMemorySize);
+        }
+
+        /// <summary>
+        /// Uses the <see cref="ModuleAoB(string, ProcessModule)"/> and passes in the <see cref="Process.MainModule"/>
+        /// </summary>
+        /// <param name="pattern">byte[] pattern</param>
+        /// <returns>Addresses that match the byte pattern</returns>
+        public IEnumerable<IntPtr> BaseAoB(string pattern)
+        {
+            return ModuleAoB(pattern, Proc.MainModule);
+        }
+
+        
 
         /// <summary>
         /// Get a Process Module based off name
@@ -430,7 +476,7 @@ namespace DummyMemory
             return GetModule(moduleName, comparer).BaseAddress;
         }
 
-       
+
 
         /// <summary>
         /// Inject dll into running process
@@ -471,7 +517,7 @@ namespace DummyMemory
             CloseFail_Injected = 20
         }
 
-        
+
     }
 }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace DummyMemory.Interfaces
 {
@@ -15,11 +16,23 @@ namespace DummyMemory.Interfaces
         /// <param name="offsets"></param>
         /// <returns></returns>
         IntPtr FindDMAAddy(IntPtr address, params int[] offsets);
+
         /// <summary>
-        /// Commit an Area of Bytes scan.
+        /// 
         /// </summary>
         /// <param name="pattern"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
         /// <returns></returns>
-        IEnumerable<IntPtr> AoB(string pattern);
+        IEnumerable<IntPtr> AoB(string pattern, int start, int end);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pattern"></param>
+        /// <param name="module"></param>
+        /// <returns></returns>
+        IEnumerable<IntPtr> ModuleAoB(string pattern, ProcessModule module);
+
     }
 }
