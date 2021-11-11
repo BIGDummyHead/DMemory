@@ -398,7 +398,7 @@ namespace DummyMemory
         {
             string[] splitPattern = pattern.Split(' ');
 
-            byte[] moduleMemory = new byte[start];
+            byte[] moduleMemory = new byte[end];
 
             Native.ReadProcessMemory(ProcHandle, start, moduleMemory, end, out _);
 
