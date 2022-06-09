@@ -27,8 +27,9 @@ namespace DMemory.Detouring
                     continue;
                 }
 
-                read = Array.Empty<byte>();
-                return false;
+                    read = Array.Empty<byte>();
+                    return false;
+                }
             }
 
             read = bysRead.ToArray();
