@@ -1,10 +1,5 @@
 # Dummy Memory
 
-<<<<<<< HEAD
-#### This library has simple methods to read and write memory, relies heavily on IntPtr, and has a unique Detouring system using Code Caves.
-
-This package has a nuget source which can be found [here](https://github.com/BIGDummyHead?tab=packages&repo_name=Dummy-Memory)
-=======
 #### A memory package covering all your most inner basic needs for creating a game hack.
 
 Features:
@@ -18,17 +13,12 @@ Features:
 * Admin checks
 * Generically converting types into byte[]
 * Generically converting byte[] to types
->>>>>>> 2ec4814b55128ab112c8457499cdfd34f01f1060
 
 ### Copy Me 
 
 ```csharp
 
-<<<<<<< HEAD
-using DummyMemory;
-=======
 using DMemory;
->>>>>>> 2ec4814b55128ab112c8457499cdfd34f01f1060
 
 class Program
 {
@@ -63,23 +53,14 @@ class Program
 
 ## Creating Detours
 
-<<<<<<< HEAD
-Detours is coined as AoB injection by Cheat Engine, it allows us to essentialy replace the game's code by jumping to a allocated region of memory, and then returning to the next address we just wrote our Jump code to. I've tried to make code caves as friendly as possible by simply supplying basic info about your AoB injection and then being able to say `cave.Inject();` or `cave.Eject();`
-=======
 Detours has been coined as AoB injection by Cheat Engine, it allows us to essentialy replace the game's code by jumping to a allocated region of memory, and then seamlessly returning to that original call. I've tried to make code caves as friendly as possible by simply supplying basic info about your AoB injection and then being able to say `cave.Inject();` or `cave.Eject();`
->>>>>>> 2ec4814b55128ab112c8457499cdfd34f01f1060
 
 Below you can see how to write your own code cave! 
 
 ```csharp
 
-<<<<<<< HEAD
-using DummyMemory;
-using DummyMemory.Detouring;
-=======
 using DMemory;
 using DMemory.Detouring;
->>>>>>> 2ec4814b55128ab112c8457499cdfd34f01f1060
 
 //this code cave will simply increase instead of decrease the ammo count.
 static Memory mem = new Memory("ac_client");
@@ -116,22 +97,6 @@ static void Main()
 }
 ```
 
-<<<<<<< HEAD
-## Injecting DLLs
-
-Injecting DLLs can sometimes be frustrating in C# so I've made it pretty simple in this latest update. But you'll have to run your Program in ADMIN mode to inject them.
-Let's take a look at some of the results you may get when injecting your own dll.
-
-* Dll Does Not Exist - The dll you requested to inject does not exist
-* Not Admin - Your program is not in Administrator mode
-* Bad Pointer - One of the pointers when injecting your Dll was equal to 0
-* Injected - No errors happened!
-* Close Fail Injected - Handle(s) from your injection were not properly closed
-
-So how do we do it?
-
-We can either do it throught a static method or through an instance of Memory.cs as such
-=======
 ## Injecting a Dll
 
 Injecting Dynamic Link Libraries can sometimes be frustrating in C# so I've made it pretty simple in this latest update. 
@@ -203,20 +168,9 @@ FrozenValue.UpdateTimer(TimeSpan.FromSeconds(5)); //tick is now every 5 seconds.
 ```
 
 Alternatively we can freeze values many different ways!
->>>>>>> 2ec4814b55128ab112c8457499cdfd34f01f1060
+
 
 ```csharp
-
-Memory m = new Memory("ac_client");
-<<<<<<< HEAD
-//there you go you sucessfully injected your dll
-Memory.InjectionStatus status = m.Inject("C:\\Path\\target.dll");
-
-//or
-Memory.InjectionStatus status = Memory.Inject(Process.GetProcessesByName("ac_client")[0], "C:\\Path\\target.dll");
-
-```
-=======
 
 using(FrozenValue fv = m.Freeze<int>(0x509B74, 200, 0xF8)) //FrozenValue implements IDispoable.
 {
@@ -225,4 +179,3 @@ using(FrozenValue fv = m.Freeze<int>(0x509B74, 200, 0xF8)) //FrozenValue impleme
 } //value is unfrozen at the end and removed from the global timer tick.
 
 ```
->>>>>>> 2ec4814b55128ab112c8457499cdfd34f01f1060
