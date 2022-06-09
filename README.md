@@ -1,6 +1,18 @@
 # Dummy Memory
 
-#### This library has simple methods to read and write memory, relies heavily on IntPtr, and has a unique Detouring system using Code Caves.
+#### A memory package covering all your most inner basic needs for creating a game hack.
+
+Features:
+
+* A Native collection of User32.dll and Kernel32.dll methods.
+* Freezing values
+* LoadLibraryA injector
+* Code Caves with Inject/Eject methods
+* AoB Scanning
+* FindDMAAddy
+* Admin checks
+* Generically converting types into byte[]
+* Generically converting byte[] to types
 
 This package has a nuget source which can be found [here](https://github.com/BIGDummyHead?tab=packages&repo_name=Dummy-Memory)
 
@@ -8,7 +20,7 @@ This package has a nuget source which can be found [here](https://github.com/BIG
 
 ```csharp
 
-using DummyMemory;
+using DMemory;
 
 class Program
 {
@@ -43,14 +55,14 @@ class Program
 
 ## Creating Detours
 
-Detours is coined as AoB injection by Cheat Engine, it allows us to essentialy replace the game's code by jumping to a allocated region of memory, and then returning to the next address we just wrote our Jump code to. I've tried to make code caves as friendly as possible by simply supplying basic info about your AoB injection and then being able to say `cave.Inject();` or `cave.Eject();`
+Detours has been coined as AoB injection by Cheat Engine, it allows us to essentialy replace the game's code by jumping to a allocated region of memory, and then seamlessly returning to that original call. I've tried to make code caves as friendly as possible by simply supplying basic info about your AoB injection and then being able to say `cave.Inject();` or `cave.Eject();`
 
 Below you can see how to write your own code cave! 
 
 ```csharp
 
-using DummyMemory;
-using DummyMemory.Detouring;
+using DMemory;
+using DMemory.Detouring;
 
 //this code cave will simply increase instead of decrease the ammo count.
 static Memory mem = new Memory("ac_client");
@@ -87,28 +99,86 @@ static void Main()
 }
 ```
 
-## Injecting DLLs
+## Injecting a Dll
 
-Injecting DLLs can sometimes be frustrating in C# so I've made it pretty simple in this latest update. But you'll have to run your Program in ADMIN mode to inject them.
-Let's take a look at some of the results you may get when injecting your own dll.
+Injecting Dynamic Link Libraries can sometimes be frustrating in C# so I've made it pretty simple in this latest update. 
 
-* Dll Does Not Exist - The dll you requested to inject does not exist
-* Not Admin - Your program is not in Administrator mode
-* Bad Pointer - One of the pointers when injecting your Dll was equal to 0
-* Injected - No errors happened!
-* Close Fail Injected - Handle(s) from your injection were not properly closed
+> Note: You'll have to run your program as an Administrator for an injection to be possible!
 
-So how do we do it?
-
-We can either do it throught a static method or through an instance of Memory.cs as such
 
 ```csharp
 
 Memory m = new Memory("ac_client");
-//there you go you sucessfully injected your dll
-Memory.InjectionStatus status = m.Inject("C:\\Path\\target.dll");
 
-//or
-Memory.InjectionStatus status = Memory.Inject(Process.GetProcessesByName("ac_client")[0], "C:\\Path\\target.dll");
+string path = "C:\\Path\\target.dll";
+
+Injector inj = new Injector(m.Handle, dllFile: path, @throw: true); //we indicate that we want to inject the Process Handle for m with the dll from the path. 
+//if the injector fails it will throw an exception.
+
+bool success = inj.LoadLibraryASuspended(out IntPtr hThread); //this creates a suspended remote thread that can later be resumed/closed.
+
+//to start your thread simply do:
+inj.Resume(hThread);
+inj.Close(hThread); //make sure you close this handle as well.
+
+
+//Let's say that we just wanted to inject and close immediately
+success = inj.LoadLibraryA();
+
+```
+
+## Area of Byte Scan
+
+Luckily there are 3 ways to scan for an area of bytes!
+
+```csharp
+
+Memory m = new Memory("ac_client");
+string pat = "FF 0E 57 8B 7C 24 14";
+
+//we can also use wildcards such as '?' or '??' instead of a byte
+IEnumerable<IntPtr> aob = m.AoB(pat, start:0, end:40000); //gives the addresses of byte[] that match this pattern
+
+//uses the start of this module and its size.
+aob = m.ModuleAoB(pat, m.MainModule);
+
+//uses the main module of the process to scan for a pattern!
+aob = m.BaseAoB(pat); 
+```
+
+## Freezing Values
+
+We can freeze values at a certain address like so!
+
+```csharp
+
+Memory m = new Memory("ac_client");
+
+//creates a new frozen value at 0x509B74 with the offset of 0xF8
+//the address is written over with the value of 200
+FrozenValue fv = new FrozenValue(m, m.FindDMAAddy(0x509B74, 0xF8), m.GetBytes(200));
+
+fv.Freeze = true; //the value is now frozen and is written over every .125 seconds.
+
+fv.Freeze = false;
+
+fv.ReWrite();
+
+//to change this tick we can call UpdateTimer
+FrozenValue.UpdateTimer(TimeSpan.FromSeconds(5)); //tick is now every 5 seconds.
+
+```
+
+Alternatively we can freeze values many different ways!
+
+```csharp
+
+Memory m = new Memory("ac_client");
+
+using(FrozenValue fv = m.Freeze<int>(0x509B74, 200, 0xF8)) //FrozenValue implements IDispoable.
+{
+    fv.rewriteOnDispose = true;
+    //code
+} //value is unfrozen at the end and removed from the global timer tick.
 
 ```
