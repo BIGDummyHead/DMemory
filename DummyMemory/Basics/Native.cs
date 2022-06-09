@@ -10,10 +10,6 @@ namespace DMemory
     /// </summary>
     public static class Native
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public const int MAX_PATH = 260;
 
         /// <summary>
         /// Used to represent of a window.
@@ -553,9 +549,6 @@ namespace DMemory
         [DllImport("kernel32.dll")]
         public static extern bool CloseHandle([In] IntPtr handle);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool ReadProcessMemory(IntPtr hProcess, long lpBaseAddress, [In, Out] byte[] lpBuffer, int dwSize, out IntPtr lpNumberOfBytesRead);
-
         /// <summary>
         /// Read process memory
         /// </summary>
@@ -582,9 +575,6 @@ namespace DMemory
         /// <returns></returns>
         [DllImport("kernel32.dll")]
         public static extern bool WriteProcessMemory([In] IntPtr hProcess, [In] IntPtr lpBaseAddress, [In] byte[] lpBuffer, [In] int dwSize, [Out] out IntPtr lpNumberOfBytesWritten);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool ReadProcessMemory(IntPtr hProcess, ulong lpBaseAddress, [In, Out] byte[] lpBuffer, ulong dwSize, out IntPtr lpNumberOfBytesRead);
 
         /// <summary>
         /// Writes data to an area of memory in a specified process. The entire area to be written to must be accessible or the operation fails.
@@ -622,12 +612,6 @@ namespace DMemory
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool VirtualProtectEx([In] IntPtr hProcess, [In] IntPtr lpAddress, [In] int dwSize, [In] ProcessAccessFlags flNewProtect, [Out] out ProcessAccessFlags lpflOldProtect);
 
-
-
-
-
-
-
         /// <summary>
         /// Reserves, commits, or changes the state of a region of memory within the virtual address space of a specified process. The function initializes the memory it allocates to zero.
         /// </summary>
@@ -653,8 +637,6 @@ namespace DMemory
         public static extern IntPtr VirtualAllocEx([In] IntPtr hProcess, [In, Optional] IntPtr lpAddress, [In] int dwSize, [In] uint flAllocationType, [In] uint flProtect);
 
 
-            return ret;
-        }
 
         /// <summary>
         /// Releases, decommits, or releases and decommits a region of memory within the virtual address space of a specified process.

@@ -38,7 +38,7 @@ namespace DMemory
                 {
                     Debug.Log($"Process found: {proc.ProcessName} | {proc.Id}");
                     return proc;
-            }
+                }
             }
 
             return null;
@@ -59,7 +59,6 @@ namespace DMemory
                     return RefreshAdmin();
 
                 return backing_admin;
-                }
             }
         }
 
@@ -81,7 +80,7 @@ namespace DMemory
                 Debug.Log($"Admin status refresh: {backing_admin}");
 
                 return backing_admin;
-        }
+            }
         }
 
 
@@ -110,56 +109,7 @@ namespace DMemory
             return procs[0].IsOpen();
         }
 
-        /// <summary>
-        /// Inject dll into running process
-        /// </summary>
-        /// <param name="proc"></param>
-        /// <param name="dllPath"></param>
-        /// <returns></returns>
-        public static InjectionStatus Inject(Process proc, string dllPath)
-        {
-            if (!File.Exists(dllPath))
-                return InjectionStatus.DllDoesNotExist;
-
-            if (!Admin)
-                return InjectionStatus.NotAdmin;
-
-            IntPtr hProc = Native.OpenProcess(proc, Native.ProcessAccessFlags.All);
-
-            if (hProc == IntPtr.Zero)
-                return InjectionStatus.BadPointer;
-
-            int size = (dllPath.Length + 1) * Marshal.SizeOf(typeof(char));
-
-            IntPtr alloc = Native.VirtualAllocEx(hProc, IntPtr.Zero, size, Native.AllocationType.Commit | Native.AllocationType.Reserve, Native.MemoryProtection.ReadWrite);
-
-            if (alloc == IntPtr.Zero)
-                return InjectionStatus.BadPointer;
-
-            Native.WriteProcessMemory(hProc, alloc, Encoding.Default.GetBytes(dllPath), size, out _);
-
-            IntPtr module = Native.GetProcAddress(Native.GetModuleHandle("kernel32.dll"), "LoadLibraryA");
-
-            if (module == IntPtr.Zero)
-                return InjectionStatus.BadPointer;
-
-            //at this point forward all is injected
-            IntPtr hThread = Native.CreateRemoteThread(hProc, IntPtr.Zero, 0, module, alloc, 0, out _);
-
-            //2 close fails occured
-            if (!Native.CloseHandle(hProc))
-                return InjectionStatus.CloseFail_Injected;
-
-            //hThread == IntPtr.Zero
-            if (hThread == IntPtr.Zero)
-                return InjectionStatus.CloseFail_Injected | InjectionStatus.BadPointer;
-
-            //close final handle
-            if (!Native.CloseHandle(hThread))
-                return InjectionStatus.CloseFail_Injected;
-
-            return InjectionStatus.Injected;
-        }
+        
         #endregion
 
         #region Props
@@ -233,7 +183,7 @@ namespace DMemory
             isDiposed = true;
 
             Debug.LogWarning("Memory Object disposed!");
-        }
+        } 
         #endregion
 
 
@@ -479,7 +429,7 @@ namespace DMemory
             return X;
         }
 
-        
+
 
         /// <summary>
         /// Get a Process Module based off name
@@ -509,51 +459,9 @@ namespace DMemory
         {
             return GetModule(moduleName, comparer).BaseAddress;
         }
-
-
-
-        /// <summary>
-        /// Inject dll into running process
-        /// </summary>
-        /// <param name="dllPath">Dll to inject</param>
-        /// <returns></returns>
-        public InjectionStatus Inject(string dllPath)
-        {
-            return Inject(Proc, dllPath);
-        }
-
-
-        /// <summary>
-        /// Status of Injection
-        /// </summary>
-        [Flags]
-        public enum InjectionStatus : int
-        {
-            /// <summary>
-            /// Dll does not exist
-            /// </summary>
-            DllDoesNotExist = -2,
-            /// <summary>
-            /// You are not an admin
-            /// </summary>
-            NotAdmin = -1,
-            /// <summary>
-            /// Pointer was equal to 0
-            /// </summary>
-            BadPointer = 1,
-            /// <summary>
-            /// Injection success!
-            /// </summary>
-            Injected = 10,
-            /// <summary>
-            /// Injection success, Handle(s) failed to close
-            /// </summary>
-            CloseFail_Injected = 20
-        }
-
-
     }
 }
+
 
 
 

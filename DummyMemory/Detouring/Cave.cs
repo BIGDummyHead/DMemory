@@ -65,8 +65,6 @@ namespace DMemory.Detouring
         /// <param name="alloc">Allocation settings for your cave.</param>
         public Cave(Memory mem, IntPtr addr, byte[] injection, Allocation alloc)
         {
-            originalAddr = addr;
-
             if (addr == IntPtr.Zero)
                 throw new Exception("Original Address may not be null");
 
