@@ -14,8 +14,6 @@ Features:
 * Generically converting types into byte[]
 * Generically converting byte[] to types
 
-This package has a nuget source which can be found [here](https://github.com/BIGDummyHead?tab=packages&repo_name=Dummy-Memory)
-
 ### Copy Me 
 
 ```csharp
