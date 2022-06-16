@@ -164,7 +164,7 @@ namespace DMemory.Detouring
             if (MemoryBlock == IntPtr.Zero)
                 return;
 
-            Native.VirtualFreeEx(Mem.Handle, MemoryBlock, Allocator.memorySize, Native.FreeType.MEM_RELEASE);
+            Native.VirtualFreeEx(Mem.Handle, MemoryBlock, 0, Native.FreeType.MEM_RELEASE);
         }
 
         /// <summary>

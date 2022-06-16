@@ -65,7 +65,6 @@ namespace DMemory
         /// <summary>
         /// Rechecks if the application is in Administrator mode
         /// </summary>
-        /// <param name="proc">Process to check</param>
         /// <returns></returns>
         public static bool RefreshAdmin()
         {
