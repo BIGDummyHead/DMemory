@@ -15,6 +15,8 @@ Features:
 * Generically converting byte[] to types
 * Input Manager
 
+You can find the source code for most examples listed [here](https://github.com/BIGDummyHead/DMemory/blob/master/TesingApp/Program.cs) under the [TestingApp](https://github.com/BIGDummyHead/DMemory/tree/master/TesingApp) project.
+
 ### Copy Me 
 
 ```csharp
@@ -45,7 +47,7 @@ class Program
         return mem.Read<Vector3>(PlayerBase, offset);
     }
     
-    public Vector3
+    public struct Vector3
     {
        public float x, z, y;
     }
@@ -97,6 +99,8 @@ static void Main()
     cave.Eject();
 }
 ```
+
+> All code below comes from [here](https://github.com/BIGDummyHead/DMemory/blob/master/TesingApp/Program.cs)!
 
 ## Injecting a Dll
 
