@@ -13,6 +13,7 @@ Features:
 * Admin checks
 * Generically converting types into byte[]
 * Generically converting byte[] to types
+* Input Manager
 
 ### Copy Me 
 
@@ -177,5 +178,26 @@ using(FrozenValue fv = m.Freeze<int>(0x509B74, 200, 0xF8)) //FrozenValue impleme
     fv.rewriteOnDispose = true;
     //code
 } //value is unfrozen at the end and removed from the global timer tick.
+
+```
+
+## Detecting User Input
+
+When we want to detect if the user is pressing, holding, releasing, or simply not touching a key, we will use the Input class.
+
+```csharp
+
+Input.State vState = Input.GetState(0x41, out State? last);
+//Input.GetState(0x41); as well
+//or:
+Input.State state = Input.GetState(KeyBoard.A, out State? last); 
+//Input.GetState(KeyBoard.A); as well
+
+//we can also directly check states 
+bool vIsDown = Input.GetDown(0x41);
+//or:
+bool isDown = Input.GetDown(KeyBoard.A);
+
+//others: Input.GetUp | Input.GetHeld | Input.GetReleased
 
 ```
