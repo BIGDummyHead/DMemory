@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
+
 //A testing app for testing out core components of the library.
 class Program
 {
@@ -16,8 +17,14 @@ class Program
     {
         DMemory.Debugging.Debug.UseConsole = true;
 
+        InputTest(Input.State.Down);
+        InputTest(Input.State.Up);
+        InputTest(Input.State.Down);
+        InputTest(Input.State.Released);
+
         EndTests();
     }
+
 
     static void EndTests(bool force = false)
     {
@@ -28,6 +35,14 @@ class Program
         }
 
         Environment.Exit(0);
+    }
+
+    static void InputTest(Input.State requiredState, KeyBoard key = KeyBoard.F)
+    {
+        Console.WriteLine($"'{key}' must be at a {requiredState} state to continue...");
+        while (Input.GetState(key) != requiredState) { }
+        
+        END();
     }
 
     static IntPtr FindDMAAddyTest()

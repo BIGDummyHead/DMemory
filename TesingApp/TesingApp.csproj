@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">ARM64</Platform>
     <ProjectGuid>{E88D394A-E148-4A08-AAC8-432912E58492}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>TesingApp</RootNamespace>
@@ -110,12 +110,6 @@
     <None Include="app.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DummyMemory\DummyMemory.csproj">
-      <Project>{1cef0ade-3fcb-43f3-a064-8476adc01040}</Project>
-      <Name>DummyMemory</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4.7.2 %28x86 and x64%29</ProductName>
@@ -126,6 +120,12 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DummyMemory\DummyMemory.csproj">
+      <Project>{1cef0ade-3fcb-43f3-a064-8476adc01040}</Project>
+      <Name>DummyMemory</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

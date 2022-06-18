@@ -6,6 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{1CEF0ADE-3FCB-43F3-A064-8476ADC01040}</ProjectGuid>
     <OutputType>Library</OutputType>
+    <!--<OutputType>Library</OutputType>-->
     <RootNamespace>DMemory</RootNamespace>
     <AssemblyName>DM</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
@@ -59,6 +60,9 @@
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
     <RegisterForComInterop>false</RegisterForComInterop>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <CodeAnalysisRuleSet>
+    </CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -80,6 +84,7 @@
     <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
+    <DocumentationFile>bin\x64\Release\DM.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -115,6 +120,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Basics\FrozenValue.cs" />
+    <Compile Include="Basics\Input.cs" />
+    <Compile Include="Basics\KeyBoard.cs" />
     <Compile Include="Basics\Injector.cs" />
     <Compile Include="Basics\Memory.cs" />
     <Compile Include="Debugging\Debug.cs" />

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using Debug = DMemory.Debugging.Debug;
@@ -108,7 +107,7 @@ namespace DMemory
             return procs[0].IsOpen();
         }
 
-        
+
         #endregion
 
         #region Props
@@ -182,7 +181,7 @@ namespace DMemory
             isDiposed = true;
 
             Debug.LogWarning("Memory Object disposed!");
-        } 
+        }
         #endregion
 
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace DMemory
 {
@@ -338,9 +337,9 @@ namespace DMemory
             MEM_WRITE_WATCH = 0x200000
         }
 
-            /// <summary>
+        /// <summary>
         /// Flags used for creating a new remote thread.
-            /// </summary>
+        /// </summary>
         [Flags]
         public enum ThreadCreationFlags : uint
         {
@@ -369,14 +368,14 @@ namespace DMemory
             /// </summary>
             MEM_DECOMMIT = 0x00004000,
 
-        /// <summary>
+            /// <summary>
             /// Releases the specified region of pages, or placeholder (for a placeholder, the address space is released and available for other allocations). After this operation, the pages are in the free state.
-        /// </summary>
+            /// </summary>
             MEM_RELEASE = 0x00008000,
 
-        /// <summary>
+            /// <summary>
             /// To coalesce two adjacent placeholders, specify MEM_RELEASE | MEM_COALESCE_PLACEHOLDERS. When you coalesce placeholders, lpAddress and dwSize must exactly match the overall range of the placeholders to be merged.
-        /// </summary>
+            /// </summary>
             /// <remarks>Must be used with <see cref="MEM_RELEASE"/></remarks>
             MEM_COALESCE_PLACEHOLDERS = 0x00000001,
             /// <summary>
@@ -461,8 +460,8 @@ namespace DMemory
         [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
         public static extern IntPtr GetProcAddress([In] IntPtr hModule, [In] string procName);
 
-        
-       
+
+
 
 
         /// <summary>
@@ -773,6 +772,12 @@ namespace DMemory
         /// <returns>The last error call set by a call to the Win32 SetLastError function.</returns>
         public static int MarshalLastError() => Marshal.GetLastWin32Error();
 
+        /// <summary>
+        /// Determines whether a key is up or down at the time the function is called, and whether the key was pressed after a previous call to GetAsyncKeyState.
+        /// </summary>
+        /// <param name="vKey">The virtual key code.</param>
+        [DllImport("user32.dll")]
+        public static extern short GetAsyncKeyState([In] int vKey);
 
     }
 }
